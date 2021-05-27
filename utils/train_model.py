@@ -10,24 +10,27 @@
 """
 
 # Dependencies
+from typing import Container
 import pandas as pd
 import pickle
-from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import train_test_split
 
 # Fetch training data and preprocess for modeling
 train = pd.read_csv('data/train_data.csv')
 
-train = train[(train['Commodities'] == 'APPLE GOLDEN DELICIOUS')]
+df_train = train[(train['Commodities'] == 'APPLE GOLDEN DELICIOUS')].drop(['Date', 'Commodities', 'Container', 'Size_Grade', 'Province'], axis=1)
 
-y_train = train['avg_price_per_kg']
-X_train = train[['Total_Qty_Sold','Stock_On_Hand']]
+X = df_train.drop('avg_price_per_kg', axis=1)
+y = df_train['avg_price_per_kg']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
 
 # Fit model
-lm_regression = LinearRegression(normalize=True)
+reg_tree = DecisionTreeRegressor(max_depth=11, min_samples_leaf=7, random_state=5)
 print ("Training Model...")
-lm_regression.fit(X_train, y_train)
+reg_tree.fit(X_train, y_train)
 
 # Pickle model for use within our API
-save_path = '../assets/trained-models/apples_simple_lm_regression.pkl'
+save_path = '../assets/trained-models/regr_tree.pkl'
 print (f"Training completed. Saving model to: {save_path}")
-pickle.dump(lm_regression, open(save_path,'wb'))
+pickle.dump(reg_tree, open(save_path,'wb'))
